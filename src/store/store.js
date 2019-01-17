@@ -1,12 +1,15 @@
 import createStore from 'unistore'
 
 export const actions = store => ({
-	increment(state) {
-		return { count: state.count + 1 }
+	setLocation(state, data) {
+		return { lat: data.lat, long: data.long }
 	},
-	decrement(state) {
-		return { count: state.count - 1 }
-	}
+	login(state, data) {
+		return { logginkey: data.logginkey, email: data.email }
+	},
+	logout(state) {
+		return { logginkey: undefined, email: undefined }
+	},
 })
 
 export default initialState => createStore(initialState)

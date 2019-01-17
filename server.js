@@ -83,7 +83,7 @@ const HTMLShell = (html, state) => `
 app.use(express.static(path.join(__dirname, "dist")));
 
 app.get('*', (req, res) => {
-	const store = createStore({ count: 0, logginkey: undefined, email: undefined, lat: undefined, long: undefined  })
+	const store = createStore({ menuActive: false, logginkey: undefined, email: undefined, lat: undefined, long: undefined  })
 
 	const state = store.getState()
 

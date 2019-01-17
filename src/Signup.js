@@ -4,7 +4,17 @@ import Nav from './Nav'
 import Helmet from "preact-helmet";
 import { FieldSet } from "./SubComponents/FieldSet/fieldSet";
 
-class SignUp extends Component {
+export default class SignUp extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { isCustomer: true };
+    this.toggle = this.toggle.bind(this);
+  }
+
+  toggle(isAlreadySelected) {
+    isAlreadySelected ? alert("You have already selected this option.") : this.setState({isCustomer: !this.state.isCustomer})
+  } 
+
   render(props, state) {
     const html =
     <div>
@@ -22,18 +32,15 @@ class SignUp extends Component {
       ]}
       />
     <div className="center">
-        <h2 className="holder marginBottom">Sign Up</h2>
+        <h2 className="holder marginBottom">Sign Up {this.state.isCustomer}</h2>
         <h3 className="marginBottom marginTop">Are you a customer or business owner?</h3>
-        <button className="btn-normal" onClick={() => alert("Test 1")}>Customer</button>
-        <button className="btn-invalid" onClick={() => alert("Test 2")}>Business Owner</button>
+        <button className={this.state.isCustomer ? "btn-normal" : "btn-invalid"} onClick={() => this.toggle(this.state.isCustomer)}>Customer</button>
+        <button className={this.state.isCustomer ? "btn-invalid" : "btn-normal"} onClick={() => this.toggle(!this.state.isCustomer)}>Business Owner</button>
     </div>
-        <FieldSet label="Email" name="email" htmlFor="email" placeholder="email" type="email" required={true}/>
+        <FieldSet label="Email" name="email" htmlFor="Email@gmail.com" placeholder="email" type="email" required={true}/>
         <FieldSet label="Password" name="password" htmlFor="password" placeholder="Password123!" type="password" required={true}/>
         <button className="marginTop btn-invalid" onClick={() => alert("Test 3")}>Submit</button>
     </div>
     return html;
   }
 }
-
-
-export default SignUp;

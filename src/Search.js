@@ -4,7 +4,7 @@ import Nav from './Nav'
 import Helmet from "preact-helmet";
 import { FieldSet } from "./SubComponents/FieldSet/fieldSet"
 
-class Search extends Component {
+export default class Search extends Component {
   render(props, state) {
     const html =
     <div className="container">
@@ -32,6 +32,3 @@ class Search extends Component {
     return html;
   }
 }
-
-
-export default Search;
