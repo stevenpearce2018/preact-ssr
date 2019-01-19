@@ -7,8 +7,14 @@ import { FieldSet } from "./SubComponents/FieldSet/fieldSet";
 export default class SignUp extends Component {
   constructor(props) {
     super(props);
-    this.state = { isCustomer: true };
+    this.state = { isCustomer: true, email: undefined, password: undefined };
     this.toggle = this.toggle.bind(this);
+    this.handleChange = this.handleChange.bind(this);
+  }
+
+  handleChange(event){
+    const { target: { name, value } } = event
+    this.setState({ [name]: value })
   }
 
   toggle(isAlreadySelected) {
@@ -37,8 +43,8 @@ export default class SignUp extends Component {
         <button className={this.state.isCustomer ? "btn-normal" : "btn-invalid"} onClick={() => this.toggle(this.state.isCustomer)}>Customer</button>
         <button className={this.state.isCustomer ? "btn-invalid" : "btn-normal"} onClick={() => this.toggle(!this.state.isCustomer)}>Business Owner</button>
     </div>
-        <FieldSet label="Email" name="email" htmlFor="Email@gmail.com" placeholder="email" type="email" required={true}/>
-        <FieldSet label="Password" name="password" htmlFor="password" placeholder="Password123!" type="password" required={true}/>
+        <FieldSet label="Email" name="email" htmlFor="email" placeholder="Email@gmail.com" type="email" required={true} onChange={this.onChange} />
+        <FieldSet label="Password" name="password" htmlFor="password" placeholder="Password123!" type="password" required={true} onChange={this.onChange} />
         <button className="marginTop btn-invalid" onClick={() => alert("Test 3")}>Submit</button>
     </div>
     return html;

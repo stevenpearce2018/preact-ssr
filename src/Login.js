@@ -5,6 +5,17 @@ import Helmet from "preact-helmet";
 import { FieldSet } from "./SubComponents/FieldSet/fieldSet";
 
 class Login extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { email: undefined, password: undefined };
+    this.handleChange = this.handleChange.bind(this);
+  }
+
+  handleChange(event){
+    const { target: { name, value } } = event
+    this.setState({ [name]: value })
+  }
+
   render(props, state) {
     const html =
     <div className="container">
@@ -24,13 +35,12 @@ class Login extends Component {
         <div className="center">
             <h2 className="holder marginBottom">Login</h2>
         </div>
-        <FieldSet label="Email" name="email" htmlFor="email" placeholder="email" type="email" required={true}/>
-        <FieldSet label="Password" name="password" htmlFor="password" placeholder="Password123!" type="password" required={true}/>
+        <FieldSet label="Email" name="email" htmlFor="email" placeholder="email" type="email" required={true} handleChange={this.handleChange} />
+        <FieldSet label="Password" name="password" htmlFor="password" placeholder="Password123!" type="password" required={true} handleChange={this.handleChange} />
         <button className="marginTop btn-invalid" onClick={() => alert("Test 3")}>Submit</button>
     </div>
     return html;
   }
 }
-
 
 export default Login;

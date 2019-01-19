@@ -5,6 +5,15 @@ import Helmet from "preact-helmet";
 import { FieldSet } from "./SubComponents/FieldSet/fieldSet"
 
 export default class Search extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { keywords: undefined, city: undefined, zip: undefined };
+    this.handleChange = this.handleChange.bind(this);
+  }
+  handleChange(event){
+    const { target: { name, value } } = event
+    this.setState({ [name]: value })
+  }
   render(props, state) {
     const html =
     <div className="container">
@@ -24,9 +33,9 @@ export default class Search extends Component {
         <div className="center">
           <h2 className="holder marginBottom">Search</h2>
         </div>
-        <FieldSet label="City" name="city" htmlFor="city" placeholder="Boston" type="text"/>
-        <FieldSet label="Zip" name="zip" htmlFor="zip" placeholder="55555" type="number" />
-        <FieldSet label="Key Words" name="keywords" htmlFor="keywords" placeholder="Pizza, Avacado Toast, Fine Wine" type="text"/>
+        <FieldSet label="City" name="city" htmlFor="city" placeholder="Boston" type="text" handleChange={this.handleChange}/>
+        <FieldSet label="Zip" name="zip" htmlFor="zip" placeholder="55555" type="number" handleChange={this.handleChange} />
+        <FieldSet label="Key Words" name="keywords" htmlFor="keywords" placeholder="Pizza, Avacado Toast, Fine Wine" type="text" handleChange={this.handleChange}/>
         <button className="marginTop btn-invalid" onClick={() => alert("Test 3")}>Submit</button>
     </div>
     return html;

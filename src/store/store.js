@@ -7,6 +7,9 @@ export const actions = store => ({
 	login(state, data) {
 		return { logginkey: data.logginkey, email: data.email }
 	},
+	toggleMenu(state) {
+		return { menuActive: !state.menuActive }
+	},
 	logout(state) {
 		return { logginkey: undefined, email: undefined }
 	},
