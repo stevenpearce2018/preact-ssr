@@ -1,5 +1,5 @@
 import { h } from "preact";
-import Nav from './Nav'
+import Nav from '../Nav'
 import Helmet from "preact-helmet";
 
 export const About = () => (

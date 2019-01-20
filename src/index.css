@@ -120,6 +120,7 @@ button:focus {
   outline: none;
 }
 .btn-normal {
+  cursor: pointer;
   margin: auto;
   background-color: #fde428;
   display: block;
@@ -138,6 +139,7 @@ button:focus {
   font-weight: bold;
 }
 .btn-invalid {
+  cursor: pointer;
   margin: auto;
   background-color: ghostwhite;
   border: solid;
@@ -155,6 +157,7 @@ button:focus {
   padding-left: 20px;
 }
 .btn-submit{
+  cursor: pointer;
   font-weight: bold;
   margin: auto;
   background-color: #007bff;
@@ -168,15 +171,6 @@ button:focus {
   margin-bottom: 24px;
   padding-right: 20px;
   padding-left: 20px;
-}
-.decrement-btn {
-  background-color: #BC1B1B;
-  border: none;
-  color: white;
-  border-radius: 3px;
-  padding: 10px 20px;
-  font-size: 14px;
-  margin: 0 10px;
 }
 
 .marginTop{
@@ -195,7 +189,86 @@ button:focus {
 .none{
   display: none;
 }
+.loaderContainer {
+  display: flex;
+  justify-content: center;
+}
+.couponHolder{
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.btnHolder{
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+.coupon{
+  margin: 10px;
+  width: 48%;
+  background-color: ghostwhite;
+  border: solid;
+  border-color: lightgray;
+  border-radius: 5px;
+  border-width: 1px;
+}
+.oldPrice, .newPrice{
+  display: inline-block;
+  width: 50%;
+  text-align: left;
+  color:red;
+  text-align:left;
+  font-weight: bold;
+  margin-left:20px;
+}
+.oldPrice{
+  text-decoration: line-through;
+}
+.newPrice{
+  color: green;
+}
+.percentOff, .savings{
+  display: inline-block;
+  width: 50%;
+  text-align: right;
+  color:green;
+  font-weight: bold;
+  margin-left:-40px;
+}
+.ctitle{
+  width: 80%;
+  margin-left: 10%;
+  text-align: center;
+}
+.img{
+  width: calc(100% - 40px);
+  margin-left:20px;
+  margin-right:20px;
+}
+.amountLeft{
+  width: 50%;
+  display: inline-block;
+  text-align: left;
+  margin-left:20px;
+  font-weight: bold;
+}
+.description{
+  width: calc(100% - 40px);
+  display: inline-block;
+  text-align: left;
+  margin-left:20px;
+  margin-right: 20px;
+}
+.loader {
+
+}
 @media only screen and (max-width: 1225px) {
+  .coupon{
+    margin: 10px;
+    width: 100%;
+  }
   .navOptions{
     display: none;
   }

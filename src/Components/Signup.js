@@ -1,8 +1,8 @@
 import { h, render, Component } from 'preact';
 import preact from 'preact';
-import Nav from './Nav'
+import Nav from '../Nav'
 import Helmet from "preact-helmet";
-import { FieldSet } from "./SubComponents/FieldSet/fieldSet";
+import { FieldSet } from "../SubComponents/FieldSet/fieldSet";
 
 export default class SignUp extends Component {
   constructor(props) {

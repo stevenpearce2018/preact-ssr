@@ -2,21 +2,23 @@ import { h } from 'preact'
 import Router from 'preact-router'
 
 import { App } from "./App";
-import { About } from "./About";
-import Search from './Search';
-import Login from "./Login";
-import Signup from "./Signup"
-import AccountSettings from "./AccountSettings";
-import UploadCoupons from "./UploadCoupons";
+import { About } from "./Components/About";
+import Search from './Components/Search';
+import Login from "./Components/Login";
+import Signup from "./Components/Signup"
+import AccountSettings from "./Components/AccountSettings";
+import UploadCoupons from "./Components/UploadCoupons";
+
+import AsyncRoute from 'preact-async-route';
 
 export default () => (
 	<Router>
 		<App path="/:category?" />
-		<About path="/about" />
-		<Search path="/search" />
-		<Login path="/login" />
-		<Signup path="/signup" />
-		<AccountSettings path="/accountsettings"/>
-		<UploadCoupons path="/uploadcoupons"/>
+		<AsyncRoute path="/about" component={About} />
+		<AsyncRoute path="/search" component={Search} />
+		<AsyncRoute path="/login" component={Login} />
+		<AsyncRoute path="/signup" component={Signup} />
+		<AsyncRoute path="/accountsettings" component={AccountSettings} />
+		<AsyncRoute path="/uploadcoupons" component={UploadCoupons} />
 	</Router>
 )

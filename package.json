@@ -42,6 +42,7 @@
     "nodemailer": "^5.1.1",
     "nodemon": "^1.18.9",
     "preact": "^8.2.6",
+    "preact-async-route": "^2.2.1",
     "preact-helmet": "^4.0.0-alpha-3",
     "preact-render-to-string": "^3.7.0",
     "preact-router": "^2.6.0",

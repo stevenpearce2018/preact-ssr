@@ -1,19 +1,18 @@
 import { h, render, Component} from 'preact'
 import { connect } from 'unistore/preact'
+import Nav from "../Nav";
 
-import { actions } from './store/store'
+import { actions } from '../store/store'
 import Helmet from "preact-helmet";
-import Fieldset from "./SubComponents/FieldSet/fieldSet"
-import Nav from "./Nav";
+import Fieldset from "../SubComponents/FieldSet/fieldSet";
+import { CenterText } from "../SubComponents/CenterText/centerText";
 
 class UploadCoupons extends Component {
   render() {
     return (
       <div className="flextape">
       <Nav/>
-        <div className="center">
-            <h2 className="holder marginBottom">Coupon Form</h2>
-        </div>
+        <CenterText text={"Coupon Form"}/>
       </div>
     )
   }

@@ -101,7 +101,7 @@ const HTMLShell = (html, state) => `
             <div id="app">${html}</div>
             <script>window.__STATE__=${JSON.stringify(state).replace(/<|>/g, '')}</script>
             <script src="./app.js" async></script>
-            <script src="https://maps.google.com/maps/api/js?key=AIzaSyDSPHIFPEXvdY0sLi9E2fhPzZgeP6Aat2o" async></script>
+            <script src="https://maps.google.com/maps/api/js?key=AIzaSyDSPHIFPEXvdY0sLi9E2fhPzZgeP6Aat2o" async defer></script>
             <script src="https://js.stripe.com/v3/" async defer></script>
         </body>
     </html>`

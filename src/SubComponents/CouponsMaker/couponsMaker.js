@@ -1,8 +1,8 @@
 import { h } from 'preact'
-import capitalizeCase from './capitalizeCase';
-import uppcaseFirstWord from './uppcaseFirstWord';
-import HaversineInMiles from './HaversineInMiles';
-import postRequest from './postReqest';
+import capitalizeCase from '../../Lib/capitalizeCase';
+import uppcaseFirstWord from '../../Lib/uppcaseFirstWord';
+import HaversineInMiles from '../../Lib/HaversineInMiles';
+// import postRequest from './postReqest';
 
 // bubble values up to mycoupons component
 // const showCode = (code, showPopup, title) => showPopup(code, title);
@@ -41,14 +41,13 @@ import postRequest from './postReqest';
 //   }
 // }
 
-const CouponsMaker = props => {
+const CouponsMaker = (props, location) => {
     try {
       const content = props.map((coupons, key) =>
       <div key={key} className="coupon" id={coupons._id}>
       <br/>
-      <h2 className = "exampleTitle marginTop">{capitalizeCase(coupons.title)}</h2>
-      <img className = "exampleImage" src={coupons.base64image} alt={coupons.title}/>
-      <div className="pricing">
+      <h2 className = "ctitle marginTop marginBottom">{capitalizeCase(coupons.title)}</h2>
+      <img className = "img" src={coupons.base64image} alt={coupons.title}/>
         <div className='oldPrice'>
             Was: {(coupons.currentPrice - 0).toFixed(2)}$
         </div>
@@ -75,30 +74,32 @@ const CouponsMaker = props => {
         <hr/>
         <p>{capitalizeCase(coupons.address)}, {capitalizeCase(coupons.city)}</p>
         <br/>
-        {/* <p>{getDistanceFromUser(coupons.latitude, coupons.longitude)}</p> */}
+        <p>{HaversineInMiles(location.lat, location.long, coupons.latitude, coupons.longitude)}</p>
         <hr/>
         <br/>
-        <button className="getCoupon redBackground" onClick={ () => getOrDiscardCoupons(coupons._id, updateCouponsClaimed, "discard")}><strong> Discard Coupon </strong></button> 
-            <button className="getCoupon" onClick={ () => validateCode(coupons._id, showPopup, coupons.title)}><strong> Validate Customer Codes </strong></button>
+        <div className="btnHolder">
+          <button className="btn-normal" onClick={ () => getOrDiscardCoupons(coupons._id, updateCouponsClaimed, "discard")}><strong> Discard Coupon </strong></button> 
+          <button className="btn-normal" onClick={ () => validateCode(coupons._id, showPopup, coupons.title)}><strong> Validate Customer Codes </strong></button>
+        </div>
       </div>
       <br/>
-    </div>
   </div>
       );
       return (
-      <div className='flextape'>
-        {content}
+      <div>
+        <div className="center">
+          <h2 className="holder marginBottom">Coupons Near You</h2>
+        </div>
+        <div className='couponHolder'>
+          {content}
+        </div>
       </div>
       );
     } catch (error) {
       return (
-      <div className='center'>
-      <br/>
-      {(window.location.href.substring(window.location.href.lastIndexOf('/')+1, window.location.href.lastIndexOf('/')+7).toLowerCase() === "search" ) ?
-        <h2>Didn't find any coupons with these parameters.</h2> :
-        <h2>Unable to automatically search for coupons. Try searching manually.</h2>
-      }
-      </div>
+        <div className="center">
+          <h2 className="holder marginBottom">Did not find any coupons. We might not know your location, or you might just not have any. Why not create/claim some?</h2>
+        </div>
       )
     }
   }
