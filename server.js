@@ -10,8 +10,6 @@ const app = express();
 const bodyParser = require('body-parser');
 const minify = require('express-minify');
 const compression = require('compression')
-const favicon = require('serve-favicon');
-
 const redisHelper = require('./redisHelper')
 const bcrypt = require('bcryptjs');
 const accountSid = process.env.ACCOUNT_SID; // !todo, change dev keys to prod keys
@@ -46,7 +44,6 @@ const sm = require('sitemap');
 //   next();
 // }
 // app.use(requireHTTPS);
-app.use(favicon(__dirname + '/favicon.ico'));
 app.use(compression());
 app.use(minify());
 app.use(bodyParser.json({limit:'50mb'}))
@@ -93,6 +90,8 @@ const HTMLShell = (html, state) => `
             ${head.title.toString()}
             ${head.meta.toString()}
             ${head.link.toString()}
+            <link rel="manifest" href="/manifest.json" async defer>
+            <link rel="icon" type="image/x-icon" href="/favicon.ico" async defer/>
         </head>
         <body>
             <noscript>
@@ -101,6 +100,13 @@ const HTMLShell = (html, state) => `
             <div id="app">${html}</div>
             <script>window.__STATE__=${JSON.stringify(state).replace(/<|>/g, '')}</script>
             <script src="./app.js" async></script>
+            <script async defer>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/sw.js');
+                });
+            }
+            </script>
             <script src="https://maps.google.com/maps/api/js?key=AIzaSyDSPHIFPEXvdY0sLi9E2fhPzZgeP6Aat2o" async defer></script>
             <script src="https://js.stripe.com/v3/" async defer></script>
         </body>

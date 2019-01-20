@@ -16,7 +16,7 @@ export const App = connect(["email", "logginkey", "lat", "long"], actions)(
 class SubApp extends Component {
   constructor(props) {
     super(props);
-    this.state.coupons = <div className="loaderContainer"><img src="./spinner.gif"/></div>;
+    this.state.coupons = <div className="loaderContainer"><img src="./spinner.gif" alt="Loading coupons near you."/></div>;
     this.state.pageNumber = 1
   }
   

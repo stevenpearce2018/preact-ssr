@@ -1,0 +1,21 @@
+{
+    "short_name": "Coupons",
+    "name": "UnlimitedCouponer",
+    "icons": [
+      {
+        "src": "/icon.png",
+        "type": "image/png",
+        "sizes": "192x192"
+      },
+      {
+        "src": "/large.png",
+        "type": "image/png",
+        "sizes": "512x512"
+      }
+    ],
+    "start_url": "/",
+    "background_color": "#002e5b",
+    "display": "standalone",
+    "scope": "/",
+    "theme_color": "#fde428"
+  }
