@@ -115,7 +115,7 @@ const HTMLShell = (html, state) => `
 app.use(express.static(path.join(__dirname, "dist")));
 
 app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountsettings', 'uploadcoupons'], (req, res) => {
-	const store = createStore({ menuActive: false, logginkey: undefined, email: undefined, lat: undefined, long: undefined  })
+	const store = createStore({ coupons: undefined, menuActive: false, logginkey: undefined, email: undefined, lat: undefined, long: undefined  })
 
 	const state = store.getState()
 

@@ -6,6 +6,7 @@ import Helmet from "preact-helmet";
 import Nav from "./Nav";
 import getParameterByName from "./Lib/getParameterByName";
 import CouponsMaker from "./SubComponents/CouponsMaker/couponsMaker";
+import CenterText from "./SubComponents/CenterText/centerText";
 
 export const App = connect(["email", "logginkey", "lat", "long"], actions)(
     ({ lat, long, email, logginkey, login, logout, setLocation }) => (
@@ -16,12 +17,29 @@ export const App = connect(["email", "logginkey", "lat", "long"], actions)(
 class SubApp extends Component {
   constructor(props) {
     super(props);
-    this.state.coupons = <div className="loaderContainer"><img src="./spinner.gif" alt="Loading coupons near you."/></div>;
-    this.state.pageNumber = 1
+    this.getCoupons = this.getCoupons.bind(this);
+    this.state.coupons = <div><CenterText text={"We need your know your location to find coupons near you."}/><button className="btn-normal" onClick={this.getCoupons}>Allow Location</button></div>;
+    this.state.pageNumber = 1;
   }
-  
-  componentDidMount() {
+
+  componentDidMount(){
+    if(this.props.long && this.props.lat) {
+      this.setState({coupons: <div className="loaderContainer"><img src="./spinner.gif" alt="Loading coupons near you."/></div>})
+      fetch(`/api/geoCoupons/${this.props.long}/${this.props.lat}/${this.state.pageNumber}`, {
+        method: "GET", // *GET, POST, PUT, DELETE, etc.
+        mode: "cors", // no-cors, cors, *same-origin
+        cache: "default", // *default, no-cache, reload, force-cache, only-if-cached
+        credentials: "same-origin", // include, same-origin, *omit
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+        },
+      }).then(res => res.json()).then(data => this.setState({coupons: CouponsMaker(data.coupons, {lat: this.props.lat, long: this.props.long})}));
+    }
+  }
+
+  getCoupons(){
     const that = this;
+    this.setState({coupons: <div className="loaderContainer"><img src="./spinner.gif" alt="Loading coupons near you."/></div>})
     if (navigator && navigator.geolocation && !this.props.lat && !this.props.long) navigator.geolocation.getCurrentPosition(showPosition)
     else {
       fetch(`/api/geoCoupons/${this.props.long}/${this.props.lat}/${that.state.pageNumber}`, {
@@ -50,6 +68,7 @@ class SubApp extends Component {
       }).then(res => res.json()).then(data => that.setState({coupons: CouponsMaker(data.coupons, {lat: that.props.lat, long: that.props.long})}));
     }
   }
+
   render() {
     return (
       <div className="container">
