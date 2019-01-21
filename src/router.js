@@ -3,9 +3,9 @@ import Router from 'preact-router'
 
 import { App } from "./App";
 import { About } from "./Components/About";
-import Search from './Components/Search';
+import { Search } from './Components/Search';
 import Login from "./Components/Login";
-import Signup from "./Components/Signup"
+import { SignUp } from "./Components/Signup"
 import MyCoupons from "./Components/MyCoupons";
 import UploadCoupons from "./Components/UploadCoupons";
 
@@ -17,7 +17,7 @@ export default () => (
 		<AsyncRoute path="/about" component={About} />
 		<AsyncRoute path="/search" component={Search} />
 		<AsyncRoute path="/login" component={Login} />
-		<AsyncRoute path="/signup" component={Signup} />
+		<AsyncRoute path="/signup" component={SignUp} />
 		<AsyncRoute path="/mycoupons" component={MyCoupons} />
 		<AsyncRoute path="/uploadcoupons" component={UploadCoupons} />
 	</Router>

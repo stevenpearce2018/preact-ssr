@@ -1,10 +1,20 @@
 import { h, render, Component } from 'preact';
 import preact from 'preact';
-import Nav from '../Nav'
+import Nav from '../Nav';
 import Helmet from "preact-helmet";
 import { FieldSet } from "../SubComponents/FieldSet/fieldSet";
+import { connect } from 'unistore/preact';
+import { actions } from '../store/store';
+import checkPasswordStrength from "../Lib/checkPasswordStrength";
+import { route } from 'preact-router';
 
-export default class SignUp extends Component {
+export const SignUp = connect(["email", "loggedInKey"], actions)(
+  ({ loggedInKey, email }) => (
+    <SubSignUp loggedInKey={loggedInKey} email={email}/>
+  )
+)
+
+class SubSignUp extends Component {
   constructor(props) {
     super(props);
     this.state = { isCustomer: true, email: undefined, password: undefined };
@@ -63,6 +73,7 @@ export default class SignUp extends Component {
       <FieldSet label="Email" name="email" htmlFor="email" placeholder="Email@gmail.com" type="email" required={true} onChange={this.onChange} />
       <FieldSet label="Password" name="password" htmlFor="password" placeholder="Password123!" type="password" required={true} onChange={this.onChange} />
       <button className={checkPasswordStrength(this.state.password) && validateEmail(this.state.email) ? "marginTop btn-normal" : "marginTop btn-invalid"}  onClick={() => alert("Test 3")}>Submit</button>
+      
     </div>
     return html;
   }

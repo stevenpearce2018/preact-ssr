@@ -1,24 +1,26 @@
 import { h, render, Component } from 'preact';
 import preact from 'preact';
-import Nav from '../Nav'
+import Nav from '../Nav';
 import Helmet from "preact-helmet";
 import { FieldSet } from "../SubComponents/FieldSet/fieldSet";
 import CenterText from "../SubComponents/CenterText/centerText";
-import { connect } from 'unistore/preact'
-import { actions } from '../store/store'
+import { connect } from 'unistore/preact';
+import { actions } from '../store/store';
 import validateEmail from "../Lib/validateEmail";
 import checkPasswordStrength from "../Lib/checkPasswordStrength";
+import { route } from 'preact-router';
+import Popup from "../SubComponents/Popup/popup";
 
-export const Login = connect(["email", "loggedInKey", "lat", "long"], actions)(
-    ({ login }) => (
-      <SubLogin login={login}/>
+export const Login = connect(["loggedInKey"], actions)(
+    ({ login, loggedInKey }) => (
+      <SubLogin login={login} loggedInKey={loggedInKey}/>
     )
   )
 
 class SubLogin extends Component {
   constructor(props) {
     super(props);
-    this.state = { email: undefined, password: undefined, showPass: false };
+    this.state = { popup: undefined, email: undefined, password: undefined, showPass: false };
     this.handleChange = this.handleChange.bind(this);
     this.login = this.login.bind(this);
   }
@@ -40,13 +42,19 @@ class SubLogin extends Component {
           "Content-Type": "application/json; charset=utf-8",
         },
         body: JSON.stringify(body)
-      }).then(res => res.json()).then(data => this.props.login({email: this.state.email, loggedInKey: data.loggedInKey}));
+      }).then(res => res.json()).then(data => {
+        this.setState({popup: <Popup delay={5000} success={true}>Welcome {this.state.email}!</Popup>})
+        // this.props.login({email: this.state.email, loggedInKey: data.loggedInKey})
+        // route("/")
+      });
     }
   }
 
   render(props, state) {
     const html =
     <div className="container">
+      {this.state.popup}
+      {/* <Popup delay={5000} success={false}>This is an alert</Popup> */}
       <Nav/>
       <Helmet
         htmlAttributes={{lang: "en", amp: undefined}} // amp takes no value

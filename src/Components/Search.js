@@ -1,11 +1,20 @@
 import { h, render, Component } from 'preact';
 import preact from 'preact';
-import Nav from '../Nav'
+import Nav from '../Nav';
 import Helmet from "preact-helmet";
-import { FieldSet } from "../SubComponents/FieldSet/fieldSet"
+import { FieldSet } from "../SubComponents/FieldSet/fieldSet";
 import CenterText from "../SubComponents/CenterText/centerText";
+import { connect } from 'unistore/preact';
+import { actions } from '../store/store';
+import { route } from 'preact-router';
 
-export default class Search extends Component {
+export const Search = connect(["email", "loggedInKey", "lat", "long"], actions)(
+  ({ loggedInKey, email, lat, long }) => (
+    <SubSearch lat={lat} long={long} loggedInKey={loggedInKey} email={email}/>
+  )
+)
+
+class SubSearch extends Component {
   constructor(props) {
     super(props);
     this.state = { keywords: undefined, city: undefined, zip: undefined };
@@ -36,6 +45,7 @@ export default class Search extends Component {
         <FieldSet label="Zip" name="zip" htmlFor="zip" placeholder="55555" type="number" onChange={this.handleChange} />
         <FieldSet label="Key Words" name="keywords" htmlFor="keywords" placeholder="Pizza, Avacado Toast, Fine Wine" type="text" onChange={this.handleChange}/>
         <button className="marginTop btn-invalid" onClick={() => alert("Test 3")}>Submit</button>
+        
     </div>
     return html;
   }

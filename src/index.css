@@ -4,6 +4,100 @@ input:focus, select:focus { background: ghostwhite }
   width: 100%;
 }
 
+ .popup {
+  position:absolute;
+  top:0;
+  right:0;
+  margin-top:16px;
+  margin-right:16px;
+  width: 320px;
+  text-align: center;
+  border-radius: 3px;
+  z-index: 9;
+  }
+  .popup{
+    animation-name: slideDown;
+    -webkit-animation-name: slideDown;	
+  
+    animation-duration: 1s;	
+    -webkit-animation-duration: 1s;
+  
+    animation-timing-function: ease;	
+    -webkit-animation-timing-function: ease;	
+  
+    visibility: visible !important;						
+  }
+  
+  @keyframes slideDown {
+    0% {
+      transform: translateY(-100%);
+    }
+    50%{
+      transform: translateY(8%);
+    }
+    65%{
+      transform: translateY(-4%);
+    }
+    80%{
+      transform: translateY(4%);
+    }
+    95%{
+      transform: translateY(-2%);
+    }			
+    100% {
+      transform: translateY(0%);
+    }		
+  }
+  
+  @-webkit-keyframes slideDown {
+    0% {
+      -webkit-transform: translateY(-100%);
+    }
+    50%{
+      -webkit-transform: translateY(8%);
+    }
+    65%{
+      -webkit-transform: translateY(-4%);
+    }
+    80%{
+      -webkit-transform: translateY(4%);
+    }
+    95%{
+      -webkit-transform: translateY(-2%);
+    }			
+    100% {
+      -webkit-transform: translateY(0%);
+    }	
+  }
+  .alert{
+    padding-bottom: 20px;
+    padding-right: 20px;
+    padding-top: 20px;
+    padding-left: 20px;
+    font-weight: bold;
+    font-size: 16px;
+    color: ghostwhite;
+  }
+  .pop-error {
+    background: red;
+  }
+  .pop-success {
+    background: green;
+  }
+
+
+@-webkit-keyframes fadeinout {
+50% { opacity: 1; }
+}
+
+@keyframes fadeinout {
+50% { opacity: 1; }
+}
+
+@keyframes fade {
+0%,100% { opacity: 0 }
+50% { opacity: 1 }
+}
 .nav{
   position:absolute;
   top: 100px;
@@ -261,9 +355,22 @@ button:focus {
   margin-left:20px;
   margin-right: 20px;
 }
-.loader {
+footer{display:table; padding-bottom:30px; width:100%;}
+.social{margin:0px auto; display:table; display:table;}
+.social li{float:left; padding:0px 10px;}
+.social li a{color:#002e5b; transition: all 0.5s ease 0s;}
+.social li a:hover{color:#fde428; transition: all 0.5s ease 0s;}
 
-}
+.sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0,0,0,0);
+    border: 0;
+  }
 @media only screen and (max-width: 1225px) {
   .coupon{
     margin: 10px;
@@ -284,6 +391,10 @@ button:focus {
     background-color: #002e5b;
     right:0px;
     z-index: 3;
+    overflow-y: hidden;
+    transition-property: all;
+    transition-duration: .5s;
+    transition-timing-function: cubic-bezier(0, 1, 0.5, 1);
   }
   .subNavOptionMobile{
     background-color: #002e5b;

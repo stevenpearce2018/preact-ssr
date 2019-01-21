@@ -1,6 +1,7 @@
 import { h } from "preact";
-import Nav from '../Nav'
+import Nav from '../Nav';
 import Helmet from "preact-helmet";
+
 
 export const About = () => (
     <div className="container">
@@ -18,5 +19,6 @@ export const About = () => (
           ]}
         />
         <h2 className="holder">Our Interactive 12 Week Course Can Teach You The Fundamentials of Web Development and Programming and Land You a Programming Job With No Degree.</h2>
+        
     </div>
 );
