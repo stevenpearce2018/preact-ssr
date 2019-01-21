@@ -8,9 +8,9 @@ import getParameterByName from "./Lib/getParameterByName";
 import CouponsMaker from "./SubComponents/CouponsMaker/couponsMaker";
 import CenterText from "./SubComponents/CenterText/centerText";
 
-export const App = connect(["email", "logginkey", "lat", "long"], actions)(
-    ({ lat, long, email, logginkey, login, logout, setLocation }) => (
-      <SubApp setLocation={setLocation} lat={lat} email={email} logginkey={logginkey} login={login} logout={logout} long={long}/>
+export const App = connect(["email", "loggedInKey", "lat", "long"], actions)(
+    ({ lat, long, email, loggedInKey, login, logout, setLocation }) => (
+      <SubApp setLocation={setLocation} lat={lat} email={email} loggedInKey={loggedInKey} login={login} logout={logout} long={long}/>
     )
   )
 
@@ -18,54 +18,34 @@ class SubApp extends Component {
   constructor(props) {
     super(props);
     this.getCoupons = this.getCoupons.bind(this);
-    this.state.coupons = <div><CenterText text={"We need your know your location to find coupons near you."}/><button className="btn-normal" onClick={this.getCoupons}>Allow Location</button></div>;
+    this.getCouponsByUrl = this.getCouponsByUrl.bind(this);
+    this.state.coupons = this.props.coupons || <div><CenterText text={"We need your know your location to find coupons near you."}/><button className="btn-normal" onClick={this.getCoupons}>Allow Location</button></div>;
     this.state.pageNumber = 1;
   }
 
   componentDidMount(){
-    if(this.props.long && this.props.lat) {
-      this.setState({coupons: <div className="loaderContainer"><img src="./spinner.gif" alt="Loading coupons near you."/></div>})
-      fetch(`/api/geoCoupons/${this.props.long}/${this.props.lat}/${this.state.pageNumber}`, {
-        method: "GET", // *GET, POST, PUT, DELETE, etc.
-        mode: "cors", // no-cors, cors, *same-origin
-        cache: "default", // *default, no-cache, reload, force-cache, only-if-cached
-        credentials: "same-origin", // include, same-origin, *omit
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-        },
-      }).then(res => res.json()).then(data => this.setState({coupons: CouponsMaker(data.coupons, {lat: this.props.lat, long: this.props.long})}));
-    }
+    if(this.props.long && this.props.lat) this.getCouponsByUrl(`/api/geoCoupons/${this.props.long}/${this.props.lat}/${this.state.pageNumber}`, {lat: this.props.lat, long: this.props.long})
+  }
+  getCouponsByUrl(url, location) {
+    this.setState({coupons: <div className="loaderContainer"><img src="./spinner.gif" alt="Loading coupons near you."/></div>})
+    fetch(url, {
+      method: "GET", // *GET, POST, PUT, DELETE, etc.
+      mode: "cors", // no-cors, cors, *same-origin
+      cache: "default", // *default, no-cache, reload, force-cache, only-if-cached
+      credentials: "same-origin", // include, same-origin, *omit
+      headers: {
+        "Content-Type": "application/json; charset=utf-8",
+      },
+    }).then(res => res.json()).then(data => this.setState({coupons: CouponsMaker(data, location)}));
   }
 
   getCoupons(){
     const that = this;
-    this.setState({coupons: <div className="loaderContainer"><img src="./spinner.gif" alt="Loading coupons near you."/></div>})
     if (navigator && navigator.geolocation && !this.props.lat && !this.props.long) navigator.geolocation.getCurrentPosition(showPosition)
-    else {
-      fetch(`/api/geoCoupons/${this.props.long}/${this.props.lat}/${that.state.pageNumber}`, {
-        method: "GET", // *GET, POST, PUT, DELETE, etc.
-        mode: "cors", // no-cors, cors, *same-origin
-        cache: "default", // *default, no-cache, reload, force-cache, only-if-cached
-        credentials: "same-origin", // include, same-origin, *omit
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-        },
-      }).then(res => res.json()).then(data => that.setState({coupons: CouponsMaker(data.coupons, {lat: this.props.lat, long: this.props.long})}));
-    }
+    else this.getCouponsByUrl(`/api/geoCoupons/${this.props.long}/${this.props.lat}/${this.state.pageNumber}`, {lat: this.props.lat, long: this.props.long})
     function showPosition(location) {
       that.props.setLocation({ long: location.coords.longitude, lat: location.coords.latitude })
-      getCoupons(`/api/geoCoupons/${location.coords.longitude}/${location.coords.latitude}/${that.state.pageNumber}`)
-    }
-    const getCoupons = url => {
-      fetch(url, {
-        method: "GET", // *GET, POST, PUT, DELETE, etc.
-        mode: "cors", // no-cors, cors, *same-origin
-        cache: "default", // *default, no-cache, reload, force-cache, only-if-cached
-        credentials: "same-origin", // include, same-origin, *omit
-        headers: {
-          "Content-Type": "application/json; charset=utf-8",
-        },
-      }).then(res => res.json()).then(data => that.setState({coupons: CouponsMaker(data.coupons, {lat: that.props.lat, long: that.props.long})}));
+      that.getCouponsByUrl(`/api/geoCoupons/${location.coords.longitude}/${location.coords.latitude}/${that.state.pageNumber}`, { long: location.coords.longitude, lat: location.coords.latitude })
     }
   }
 
@@ -87,8 +67,8 @@ class SubApp extends Component {
         />
         <div className="holder">
         {this.state.coupons}
-          <button className="btn-normal" onClick={() => this.props.login({email: "BusinessOwner@gmail.com", logginkey: "dsadadadsad:b"})}>Business Login</button>
-          <button className="btn-normal" onClick={() => this.props.login({email: "Customer@gmail.com", logginkey: "dsadadadsad:c"})}>Customer Login</button>
+          <button className="btn-normal" onClick={() => this.props.login({email: "BusinessOwner@gmail.com", loggedInKey: "dsadadadsad:b"})}>Business Login</button>
+          <button className="btn-normal" onClick={() => this.props.login({email: "Customer@gmail.com", loggedInKey: "dsadadadsad:c"})}>Customer Login</button>
           <button className="btn-normal" onClick={() => this.props.logout()}>Logout</button>
         </div>
       </div>

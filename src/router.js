@@ -6,7 +6,7 @@ import { About } from "./Components/About";
 import Search from './Components/Search';
 import Login from "./Components/Login";
 import Signup from "./Components/Signup"
-import AccountSettings from "./Components/AccountSettings";
+import MyCoupons from "./Components/MyCoupons";
 import UploadCoupons from "./Components/UploadCoupons";
 
 import AsyncRoute from 'preact-async-route';
@@ -18,7 +18,7 @@ export default () => (
 		<AsyncRoute path="/search" component={Search} />
 		<AsyncRoute path="/login" component={Login} />
 		<AsyncRoute path="/signup" component={Signup} />
-		<AsyncRoute path="/accountsettings" component={AccountSettings} />
+		<AsyncRoute path="/mycoupons" component={MyCoupons} />
 		<AsyncRoute path="/uploadcoupons" component={UploadCoupons} />
 	</Router>
 )

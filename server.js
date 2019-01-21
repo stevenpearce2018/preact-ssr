@@ -25,7 +25,6 @@ const nodemailer = require('nodemailer');
 const searchableMongoIDs = require("./lib/searchableMongoIDs");
 const claimCode = require("./lib/claimCode");
 const escapeRegex = require("./lib/escapeRegex");
-const generateQR = require("./lib/generateQR");
 const validateEmail = require('./lib/validateEmail');
 const associateCouponCodeByID = require('./lib/associateCouponCodeByID');
 const cleanCoupons = require("./lib/cleanCoupons");
@@ -50,7 +49,7 @@ app.use(bodyParser.json({limit:'50mb'}))
 app.use(bodyParser.urlencoded({ extended: true, limit:'50mb' }))
 app.use('*/robots.txt', (req, res, next) => {
     res.type('text/plain')
-    res.send("# GSM: https://www.unlimitedcouponer.com\nSitemap: https://www.unlimitedcouponer.com/sitemap.xml\nUser-agent: *\nDisallow: /");
+    res.send("# GSM: https://www.unlimitedcouponer.com\nSitemap: https://www.unlimitedcouponer.com/sitemap.xml\nUser-agent: *\nDisallow:");
   });
   
   const sitemap = sm.createSitemap ({
@@ -115,32 +114,16 @@ const HTMLShell = (html, state) => `
 app.use(express.static(path.join(__dirname, "dist")));
 
 app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountsettings', 'uploadcoupons'], (req, res) => {
-	const store = createStore({ coupons: undefined, menuActive: false, logginkey: undefined, email: undefined, lat: undefined, long: undefined  })
-
+	const store = createStore({ coupons: undefined, menuActive: false, loggedInKey: undefined, email: undefined, lat: undefined, long: undefined  })
 	const state = store.getState()
-
 	const html = render(
 		<Provider store={store}>
 			<Router />
 		</Provider>
 	)
-
 	res.send(HTMLShell(html, state))
 })
 
-  
-  app.post('/api/generateQR', async(req, res) => {
-    try {
-      client.messages
-      .create({from: '+13124108678', mediaUrl: await generateQR("Hello world"), to: "+15614807156"})
-      .then(message => res.json({success:true}))
-      .done();
-    } catch (error) {
-      res.json({success:false})
-    }
-  });
-  
-  
   const transporter = nodemailer.createTransport({
     service: 'gmail',
     auth: {
@@ -182,8 +165,8 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
       transporter.sendMail(mailOptions, (error, info) => {
         if (error) return console.log(error);
       });
-      res.json({success:true})
-    }
+      res.send("Email Sent!")
+    } else res.status(400).send("Failed to send email.")
   });
   
   app.post('/api/recoverAccountWithCode', async(req, res) => {
@@ -193,7 +176,7 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
     redisHelper.get("r:"+email, confirmRandomNumber)
     async function confirmRandomNumber(randomNumberFromRedis) {
       if (randomNumberFromRedis === randomNumber && checkPasswordStrength(newPassword)) { 
-        res.json({success:true})
+        res.send("Account Recovered")
         const result = await AccountInfo.findOne({ 'email': email }) 
         const hashedPass = await bcrypt.hashSync(newPassword, 10);
         await AccountInfo.updateOne(
@@ -202,7 +185,7 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
           { "upsert" : false } 
         );
       }
-      else res.json({success:false})
+      else res.status(400).send("Failed to recover account")
     }
   });
   
@@ -227,19 +210,17 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
     }
   })
   
-  app.post('/api/signupCustomer', async(req, res) => {
+  app.post('/api/signup', async(req, res) => {
     // redisHelper.get(req.body.phoneNumber, compareRandomNumber)
     // async function compareRandomNumber(randomNumber){
     //   if (randomNumber && randomNumber === req.body.randomNumber) {
         const yourPick = req.body.yourPick;
         const password = req.body.password;
-        const phoneNumber = req.body.phoneNumber;
-        const ip = getIP(req)
-        const loggedInKey = req.body.businessName ? Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + ":b" : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + ":c";
+        const loggedInKey = yourPick === ' Business Owner' ? Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + ":b" : Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15) + ":c";
         const result = await AccountInfo.find({ 'email': req.body.email })
           if (result.length === 0) {
-            if (validateEmail(req.body.email) && req.body.email && password && checkPasswordStrength(password) && phoneNumber && yourPick && ip) {
-              if (yourPick === ' Business Owner' && req.body.businessName || yourPick === ' Customer' /* && req.body.membershipExperationDate */) {
+            if (req.body && req.body.email && validateEmail(req.body.email) && password && checkPasswordStrength(password) && yourPick) {
+              if (yourPick === ' Business Owner' || yourPick === ' Customer' /* && req.body.membershipExperationDate */) {
                 const hashedPass = await bcrypt.hashSync(password, 10);
                 const email = req.body.email.toLowerCase();
                 // let today = new Date();
@@ -255,25 +236,21 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
                   const accountInfo = new AccountInfo({
                     _id: new mongoose.Types.ObjectId(),
                     email: email,
-                    businessName: req.body.businessName,
                     password: hashedPass,
-                    phoneNumber: phoneNumber,
                     yourPick: yourPick,
                     loggedInKey: loggedInKey,
                     couponIds: [],
                     couponsCurrentlyClaimed: 0,
                     usedCoupons:[],
                     couponCodes:[],
-                    membershipExperationDate: "01-01-2018",
-                    // membershipExperationDate: membershipExperationDate,
                     ip: ip
                   })
                   await accountInfo.save().catch(err => console.log(err))
                   res.json({
                     loggedInKey:loggedInKey,
-                    membershipExperationDate: "01-01-2018",
-                    // membershipExperationDate: membershipExperationDate,
                     couponsCurrentlyClaimed: 0
+                    // membershipExperationDate: "01-01-2018",
+                    // membershipExperationDate: membershipExperationDate,
                   });
                 }
                 // if(yourPick === ' Customer') {
@@ -290,9 +267,9 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
                 // else if(yourPick === ' Business Owner') registerUser()
                 registerUser()
                 // else res.json({resp:'You need to select if you are a Business Owner or a customer!'});
-              } else res.json({resp:'You need to select if you are a Business Owner or a customer!'});
-          } else res.json({resp:'You need to fill out all fields!'});
-        } else res.json({resp:'Email address is taken!'});
+              } else res.status(400).send('You need to select if you are a Business Owner or a customer!');
+          } else res.status(400).send('You need to fill out all fields!');
+        } else res.status(400).send('Email address is taken!');
     //   } else res.json({resp:'Wrong number, please try again!'});
     // }
   });
@@ -323,32 +300,18 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
     const loggedInKey = req.body.loggedInKey;
     const outcome = await AccountInfo.find({'email' : email}).limit(1)
     if (outcome.length === 1 && bcrypt.compareSync(loggedInKey, outcome[0].loggedInKey)) {
-      if (req.body.phoneNumber) {
-        await AccountInfo.updateOne(
-          { "_id" : outcome[0]._id }, 
-          { "$set" : { phoneNumber: req.body.phoneNumber } }, 
-          { "upsert" : false } 
-        );
-      }
-      if (req.body.businessName) {
-        await AccountInfo.updateOne(
-          { "_id" : outcome[0]._id }, 
-          { "$set" : { businessName: req.body.businessName } }, 
-          { "upsert" : false } 
-        );
-      }
       if (req.body.oldPassword !== req.body.newPassword) {
         if(bcrypt.compareSync(req.body.oldPassword, outcome[0].password)) {
-          res.json({response: "Updated Account!"})
+          res.send( "Updated Account!")
           const hashedPass = await bcrypt.hashSync(req.body.newPassword, 10);
           await AccountInfo.updateOne(
             { "_id" : outcome[0]._id }, 
             { "$set" : { password: hashedPass } }, 
             { "upsert" : false } 
           );
-        } else res.json({response: "Failed To Update Password"}) 
+        } else res.status(400).send("Failed To Update Password")
       }
-    } else res.json({response: "Failed to update"})
+    } else res.status(400).send("Failed to update")
   });
   
   // Stored failed logins by ip address
@@ -366,12 +329,12 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
       f.nextTry.setTime(Date.now() + 2000 * f.count); // Wait another two seconds for every failed attempt
     }
     const onLoginSuccess = () => delete failures[remoteIp];
-    const email = req.body.email.toLowerCase();
+    const email = req.body ? req.body.email.toLowerCase() : undefined;
     const outcome = await AccountInfo.find({'email' : email}).limit(1)
     if(outcome[0] && bcrypt.compareSync(req.body.password, outcome[0].password)) {
       const loginStringBase = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
       const loggedInKey = outcome[0].yourPick === " Customer" ? loginStringBase + ":c" : loginStringBase + ":b";
-      outcome[0].yourPick === " Customer" ? res.json({loggedInKey: loggedInKey, membershipExperationDate: outcome[0].membershipExperationDate, couponsCurrentlyClaimed: outcome[0].couponsCurrentlyClaimed}) : res.json({loggedInKey: loggedInKey});
+      outcome[0].yourPick === " Customer" ? res.json({loggedInKey: loggedInKey, couponsCurrentlyClaimed: outcome[0].couponsCurrentlyClaimed}) : res.json({loggedInKey: loggedInKey});
       onLoginSuccess()
       const hashedKey = await bcrypt.hashSync(loggedInKey, 10);
       await AccountInfo.updateOne(
@@ -381,7 +344,7 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
       );
     } else {
       onLoginFail()
-      res.json({response: "Invalid login"});
+      res.status(400).send("Invalid login");
     }
   });
   
@@ -391,7 +354,7 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
     // const ip = getIP(req)
     const outcome = await AccountInfo.find({'email' : email}).limit(1)
     if (outcome.length === 1 && bcrypt.compareSync(loggedInKey, outcome[0].loggedInKey)) {
-      res.json({response:"Logout Successful"})
+      res.send("Logout Successful")
       const loginStringBase = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
       const dummyKey = outcome[0].yourPick === " Customer" ? loginStringBase + ":c" : loginStringBase + ":b";
       const hashedDummyKey = await bcrypt.hashSync(dummyKey, 10);
@@ -400,14 +363,12 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
         { "$set" : { "ip" : hashedDummyKey}, loggedInKey:hashedDummyKey }, 
         { "upsert" : false } 
       );
-    } else res.json({response:"Logout Failed"})
+    } else res.status(400).send("Logout Failed")
   })
   
   app.post(`/api/uploadCoupons`, async(req, res) => {
-    // const ip = getIP(req)
     const loggedInKey = req.body.loggedInKey;
     const outcome = await AccountInfo.find({'email':req.body.email }).limit(1)
-    console.log(req.body.superCoupon)
     if(req.body.superCoupon !== "Let's go super" && req.body.superCoupon !== "No thanks") res.json({response: "Please choose your coupon type!"});
     else if(bcrypt.compareSync(loggedInKey, outcome[0].loggedInKey)) {
       if(validateCouponForm(req.body).valid !== false) {
@@ -460,7 +421,7 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
           }
           saveCoupon();
         } else if (req.body.superCoupon === "No thanks") {
-          res.json({response: 'Coupon Created'})
+          res.send('Coupon Created')
           const amountCoupons = req.body.amountCoupons;
           let couponCodes = [];
           let i = 0
@@ -499,9 +460,9 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
           }
           saveCoupon();
         }
-        else res.json({response: 'Failed to charge the card provided, coupon was not created.'})
-      } else res.json({response: validateCouponForm(req.body).errorMessage})
-    } else res.json({response: "You are not logged in!"});
+        else res.status(400).send('Failed to charge the card provided, coupon was not created.')
+      } else res.status(400).send(validateCouponForm(req.body).errorMessage)
+    } else res.status(400).send("You are not logged in!");
   })
   
   app.post(`/api/uploadGrouponCoupon`, async(req, res) => {
@@ -509,7 +470,7 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
     else if(req && req.body && process.env.SECRETKEY === req.body.key) {
       if(validateCouponForm(req.body).valid !== false) {
         if (req.body.superCoupon === "No thanks") {
-          res.json({response: 'Coupon Created'})
+          res.send('Coupon Created')
           const amountCoupons = req.body.amountCoupons;
           let couponCodes = [];
           let i = 0
@@ -548,9 +509,9 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
           }
           saveCoupon();
         }
-        else res.json({response: 'Failed to charge the card provided, coupon was not created.'})
-      } else res.json({response: validateCouponForm(req.body).errorMessage})
-    } else res.json({response: "Wrong Key!"});
+        else res.status(400).send('Failed to charge the card provided, coupon was not created.')
+      } else res.status(400).send(validateCouponForm(req.body).errorMessage)
+    } else res.status(400).send("Wrong Key!");
   })
   
   app.get('/api/geoCoupons/:long/:lat/:pageNumber', async (req, res) => {
@@ -588,7 +549,7 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
       }).skip((pageNumber-1)*20).limit(20 - coupons.length)
       if (extraCoupons.length > 0) coupons = [...extraCoupons, ...coupons];
     }
-    res.json({ coupons: cleanCoupons(coupons)});
+    res.send(cleanCoupons(coupons));
   })
   
   // Not supported anymore
@@ -601,59 +562,59 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
       if(!data) {
         if(cityUserIsIn) {
           coupons = await Coupon.find({city : cityUserIsIn, superCoupon: "Let's go super", couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
-          if (coupons.length > 0 ) res.json({ coupons: cleanCoupons(coupons) });
+          if (coupons.length > 0 ) res.send(cleanCoupons(coupons));
           else {
             coupons = await Coupon.find({city : cityUserIsIn, superCoupon: "No Thanks", couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
-            if (coupons.length > 0 ) res.json({ coupons: cleanCoupons(coupons) });
-            else res.json({ coupons: 'No coupons were found near you. Try searching manually' }); 
+            if (coupons.length > 0 ) res.send(cleanCoupons(coupons));
+            else res.status(400).send('No coupons were found near you. Try searching manually'); 
           }
           redisHelper.set(`${cityUserIsIn}/${pageNumber}`, cleanCoupons(coupons), 60*1)
         }
         else {
           coupons = await Coupon.find({superCoupon: "Let's go super", couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
-          if (coupons.length > 0 ) res.json({ coupons: cleanCoupons(coupons) });
+          if (coupons.length > 0 ) res.send(cleanCoupons(coupons));
           else {
             coupons = await Coupon.find({superCoupon: "No Thanks", couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
-            if (coupons.length > 0 ) res.json({ coupons: cleanCoupons(coupons) });
-            else res.json({ coupons: 'No coupons were found near you. Try searching manually' });
+            if (coupons.length > 0 ) res.send(cleanCoupons(coupons));
+            else res.status(400).send('No coupons were found near you. Try searching manually');
           }
           redisHelper.set(`${cityUserIsIn}/${pageNumber}`, cleanCoupons(coupons), 60*1)
         }
-      } else if (data.length === 0) res.json({ coupons: 'No coupons were found near you. Try searching manually' });
-      else res.json({ coupons: data });
+      } else if (data.length === 0) res.status(400).send('No coupons were found near you. Try searching manually');
+      else res.send(data);
     }
   });
   
   app.get('/api/getGeoCoupons/:long/:lat/:pageNumber', async (req, res) => {
     let coupons;
-    const long = (req && req.params && req.params.long) ? req.params.long.toLowerCase().replace(/\"/g,"") : res.json({ coupons: data });
-    const lat = (req && req.params && req.params.lat) ? req.params.lat.toLowerCase().replace(/\"/g,"") : res.json({ coupons: "Could Not Find your locaton" });
+    const long = (req && req.params && req.params.long) ? req.params.long.toLowerCase().replace(/\"/g,"") : res.send( data);
+    const lat = (req && req.params && req.params.lat) ? req.params.lat.toLowerCase().replace(/\"/g,"") : res.status(400).send("Could Not Find your locaton");
     const pageNumber = req.params.pageNumber;
     redisHelper.get(`${long}/${lat}/${pageNumber}`, getCachedCoupons)
     async function getCachedCoupons (data) {
       if(!data) {
         if(long && lat && pageNumber) {
           coupons = await Coupon.find({city : cityUserIsIn, superCoupon: "Let's go super", couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
-          if (coupons.length > 0 ) res.json({ coupons: cleanCoupons(coupons) });
+          if (coupons.length > 0 ) res.send(cleanCoupons(coupons));
           else {
             coupons = await Coupon.find({city : cityUserIsIn, superCoupon: "No Thanks", couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
-            if (coupons.length > 0 ) res.json({ coupons: cleanCoupons(coupons) });
-            else res.json({ coupons: 'No coupons were found near you. Try searching manually' }); 
+            if (coupons.length > 0 ) res.send(cleanCoupons(coupons));
+            else res.status(400).send('No coupons were found near you. Try searching manually'); 
           }
           redisHelper.set(`${cityUserIsIn}/${pageNumber}`, cleanCoupons(coupons), 60*1)
         }
         else {
           coupons = await Coupon.find({superCoupon: "Let's go super", couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
-          if (coupons.length > 0 ) res.json({ coupons: cleanCoupons(coupons) });
+          if (coupons.length > 0 ) res.send(cleanCoupons(coupons));
           else {
             coupons = await Coupon.find({superCoupon: "No Thanks", couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
-            if (coupons.length > 0 ) res.json({ coupons: cleanCoupons(coupons) });
-            else res.json({ coupons: 'No coupons were found near you. Try searching manually' });
+            if (coupons.length > 0 ) res.send(cleanCoupons(coupons));
+            else res.status(400).send('No coupons were found near you. Try searching manually');
           }
           redisHelper.set(`${cityUserIsIn}/${pageNumber}`, cleanCoupons(coupons), 60*1)
         }
-      } else if (data.length === 0) res.json({ coupons: 'No coupons were found near you. Try searching manually' });
-      else res.json({ coupons: data });
+      } else if (data.length === 0) res.status(400).send('No coupons were found near you. Try searching manually');
+      else res.send(data);
     }
   });
   
@@ -670,12 +631,12 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
           let coupons;
           coupons = await Coupon.find({'_id': { $in: searchIDS}})
           coupons.length === 0 ? coupons = "No coupons found." : coupons = associateCouponCodeByID(outcome[0].couponCodes, coupons)
-          res.json({ coupons: coupons });
+          res.send(coupons);
           redisHelper.set("gyc" + email, coupons, 60*1)
         }
-        else if (outcome[0] && outcome[0].couponCodes.length === 0) res.json({response: "You are not logged in!"});
-        else res.json({response: "No coupons found."});
-      } else res.json({coupons: data});
+        else if (outcome[0] && outcome[0].couponCodes.length === 0) res.status(400).send("You are not logged in!");
+        else res.status(400).send("No coupons found.");
+      } else res.send(data);
     }
   });
   
@@ -684,12 +645,12 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
     const id = req.params.id;
     redisHelper.get(`d${id}`, gotCoupon)
     async function gotCoupon(coupon) {
-      if(coupon) res.json({coupons: data})
+      if(coupon) res.status(400).send(data)
       else {
         let coupons;
         coupons = await Coupon.find({'_id': id })
         coupons.length === 0 ? coupons = "No coupons found." : coupons;
-        res.json({ coupons: coupons });
+        res.status(coupons === "No coupons found." ? 400 : 200).send(coupons);
         redisHelper.set(`d${id}`, cleanCoupons(coupon), 60*1)
       }
     }
@@ -722,14 +683,14 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
         const startingDate = checkMembershipDate(date) ? date : today;
         const finalDate = moment(startingDate).add(numberOfMonths, 'months');
         const cleanedDate = JSON.stringify(finalDate).substring(1, 11)
-        res.json({response: `Added ${numberOfMonths} month(s) worth of membership. Thank you for your support!`, cleanedDate: cleanedDate})
+        res.json({response:`Added ${numberOfMonths} month(s) worth of membership. Thank you for your support!`, cleanedDate: cleanedDate})
         await AccountInfo.updateOne(
           { "_id" : outcome[0]._id }, 
           { "$set" : { "membershipExperationDate": cleanedDate}}, 
           { "upsert" : false } 
         );
       }
-    } else res.json({response: "Failed to add months."})
+    } else res.status(400).send("Failed to add months.")
   })
   
   app.post('/api/validateCode', async (req, res) => {
@@ -756,7 +717,7 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
         return false;
       }
       const isValidCouponCode = confirmValidCouponCode(couponCode, coupon[0].couponCodes)
-      isValidCouponCode && codeLinkedToEmail ? res.json({response: "Coupon is valid!"}) : res.json({response: "Coupon is not valid."});
+      isValidCouponCode && codeLinkedToEmail ? res.send("Coupon is valid!") : res.status(400).send( "Coupon is not valid.");
       if (isValidCouponCode && codeLinkedToEmail) {
         const arrCouponCodes = useCode(couponCode, account[0].couponCodes)
         const couponsCurrentlyClaimed = account[0].couponsCurrentlyClaimed >= 0 ? Number(account[0].couponsCurrentlyClaimed) - 1 : 0;
@@ -789,7 +750,7 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
           if (coupons.length === 0) coupons = await Coupon.find({'city' : city, 'zip' : zip, 'category' : category, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = await Coupon.find({'city' : city, 'category' : category, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = await Coupon.find({'city' : city, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
-          res.json({ coupons: cleanCoupons(coupons) });
+          res.send(cleanCoupons(coupons));
           redisHelper.set(`${city}/${zip}/${keyword}/${pageNumber}`, cleanCoupons(coupons), 60*1)
         }
         else return res.json({coupons: data});
@@ -802,10 +763,10 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
           coupons = await Coupon.find({'city' : city, 'zip' : zip, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = await Coupon.find({'city' : city, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = "No coupons found."
-          res.json({ coupons: cleanCoupons(coupons) });
+          res.send(cleanCoupons(coupons));
           redisHelper.set(`${city}/${zip}/${pageNumber}`, cleanCoupons(coupons), 60*1)
         }
-        else return res.json({coupons: data});
+        else return res.send(data);
       }
     }
     else if(keyword && zip) {
@@ -816,10 +777,10 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
           if (coupons.length === 0) coupons = await Coupon.find({'zip' : zip, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = await Coupon.find({'textarea' : keyword, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = "No coupons found."
-          res.json({ coupons: cleanCoupons(coupons) });
+          res.send(cleanCoupons(coupons));
           redisHelper.set(`${keyword}/${zip}/${pageNumber}`, cleanCoupons(coupons), 60*1)
         }
-        else return res.json({coupons: data});
+        else return res.send(data);
       }
     }
     else if(city && category) {
@@ -830,10 +791,10 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
           if (coupons.length === 0) coupons = await Coupon.find({'city' : city, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = await Coupon.find({'category' : category, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = "No coupons found."
-          res.json({ coupons: cleanCoupons(coupons) });
+          res.send(cleanCoupons(coupons));
           redisHelper.set(`${city}/${category}/${pageNumber}`, cleanCoupons(coupons), 60*1);
         }
-        else return res.json({coupons: data});
+        else return res.send(data);
       }
     }
     else if(city && keyword) {
@@ -844,10 +805,10 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
           if (coupons.length === 0) coupons = await Coupon.find({'city' : city, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = await Coupon.find({'textarea' : keyword, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = "No coupons found."
-          res.json({ coupons: cleanCoupons(coupons) });
+          res.send(cleanCoupons(coupons));
           redisHelper.set(`${city}/${keyword}/${pageNumber}`, cleanCoupons(coupons), 60*1);
         }
-        else return res.json({coupons: data});
+        else return res.send(data);
       }
     }
     else if(category && zip) {
@@ -858,10 +819,10 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
           if (coupons.length === 0) coupons = await Coupon.find({'zip' : zip, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = await Coupon.find({'category' : category, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = "No coupons found."
-          res.json({ coupons: cleanCoupons(coupons) });
+          res.send(cleanCoupons(coupons));
           redisHelper.set(`${category}/${zip}/${pageNumber}`, cleanCoupons(coupons), 60*1);
         }
-        else return res.json({coupons: data});
+        else return res.send(data);
       }
     }
     else if(category && keyword) {
@@ -872,10 +833,10 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
           if (coupons.length === 0) coupons = await Coupon.find({'category' : category, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = await Coupon.find({'textarea' : keyword, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = "No coupons found."
-          res.json({ coupons: cleanCoupons(coupons) });
+          res.send(cleanCoupons(coupons));
           redisHelper.set(`${category}/${keyword}/${pageNumber}`, cleanCoupons(coupons), 60*1);
         }
-        else return res.json({coupons: data});
+        else return res.send(data);
       }
     }
     else if(category && city) {
@@ -886,10 +847,10 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
           if (coupons.length === 0) coupons = await Coupon.find({'city' : city, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = await Coupon.find({'category' : category, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = "No coupons found."
-          res.json({ coupons: cleanCoupons(coupons) });
+          res.send(cleanCoupons(coupons));
           redisHelper.set(`${category}/${city}/${pageNumber}`, cleanCoupons(coupons), 60*1);
         }
-        else return res.json({coupons: data});
+        else return res.send(data);
       }
     }
     else if(category) {
@@ -898,10 +859,10 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
         if(!data) {
           coupons = await Coupon.find({'category' : category, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = "No coupons found."
-          res.json({ coupons: cleanCoupons(coupons) });
+          res.send(cleanCoupons(coupons));
           redisHelper.set(`category:${category}/${pageNumber}`, cleanCoupons(coupons), 60*1);
         }
-        else return res.json({coupons: data});
+        else return res.send(data);
       }
     }
     else if(city) {
@@ -910,10 +871,10 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
         if(!data) {
           coupons = await Coupon.find({'city' : city, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = "No coupons found."
-          res.json({ coupons: cleanCoupons(coupons) });
+          res.send(cleanCoupons(coupons));
           redisHelper.set(`city:${city}/${pageNumber}`, cleanCoupons(coupons), 60*1);
         }
-        else return res.json({coupons: data});
+        else return res.send(data);
       }
     }
     else if(zip) {
@@ -922,10 +883,10 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
         if(!data) {
           coupons = await Coupon.find({'zip' : zip, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = "No coupons found."
-          res.json({ coupons: cleanCoupons(coupons) });
+          res.send(cleanCoupons(coupons));
           redisHelper.set(`zip:${zip}/${pageNumber}`, cleanCoupons(coupons), 60*1);
         }
-        else return res.json({coupons: data});
+        else return res.send(data);
       }
     }
     else if(keyword) {
@@ -934,10 +895,10 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
         if(!data) {
           coupons = await Coupon.find({'textarea' : regex, couponStillValid: true}).skip((pageNumber-1)*20).limit(20)
           if (coupons.length === 0) coupons = "No coupons found."
-          res.json({ coupons: cleanCoupons(coupons) });
+          res.send(cleanCoupons(coupons));
           redisHelper.set(`keyword:${keyword}/${pageNumber}`, cleanCoupons(coupons), 60*1);
         }
-        else return res.json({coupons: data});
+        else return res.send(data);
       }
     }
   });
@@ -945,13 +906,13 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
   app.post(`/api/getCoupon`, async(req, res) => {
     const loggedInKey = req.body.loggedInKey;
     // if (!loggedInKey) res.json({response: "You need to be logged in and have a valid subscription in order to claim coupons!"});
-    if (!loggedInKey) res.json({response: "You need to be logged in order to claim coupons!"});
+    if (!loggedInKey) res.status(400).send("You need to be logged in order to claim coupons!");
     else {
       const _id = req.body._id;
       // const ip = getIP(req)
       const outcome = await AccountInfo.find({'email':req.body.email }).limit(1)
       if (outcome) {
-        if (outcome[0].yourPick !== ' Customer') res.json({response: "Only customers with a valid subscription can claim coupons!"});
+        if (outcome[0].yourPick !== ' Customer') res.status(400).send("Only customers can claim coupons!");
         else if(/* checkMembershipDate(outcome[0].membershipExperationDate) && */ bcrypt.compareSync(loggedInKey, outcome[0].loggedInKey)) {
           if (outcome[0].couponsCurrentlyClaimed < 5) {
             const isClaimed = (ids, id) => {
@@ -961,7 +922,7 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
               return false;
             }
             const claimedAlready = isClaimed(outcome[0].couponIds, _id);
-            if (claimedAlready) res.json({response: "Coupon Already Claimed!"});
+            if (claimedAlready) res.status(400).send("Coupon Already Claimed!");
             else {
               const coupon = await Coupon.find({'_id':_id }).limit(1);
               let couponCode;
@@ -979,7 +940,7 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
               const arrCouponCodes = [...outcome[0].couponCodes, {_id: _id, couponCode: couponCode}]
               if(couponCode) {
                 redisHelper.set("gyc" + req.body.email, null)
-                res.json({response: "Coupon Claimed!"});
+                res.send("Coupon Claimed!");
                 await AccountInfo.updateOne(
                   { "_id" : outcome[0]._id }, 
                   { "$set" : { 
@@ -999,25 +960,24 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
                   }, 
                   { "upsert" : false } 
                 );
-              } else res.json({response: "These coupons are no longer available. Please try another coupon."});
+              } else res.status(400).send("These coupons are no longer available. Please try another coupon.");
             }
-          } else res.json({response: "You have too many coupons! Please use or discard one of your current coupons."});
+          } else res.status(400).send("You have too many coupons! Please use or discard one of your current coupons.");
         // } else res.json({response: "Your membership has expired! Please renew it under the account settings option."});
-      } else res.json({response: "Your login credentials appear to be incorrect, please try again."});
-      }
-    else res.json({response: "You need to be logged in and have a valid subscription in order to claim coupons!"});
+      } else res.status(400).send("Your login credentials appear to be incorrect, please try again.");
+      } else res.status(400).send("You need to be logged in and have a valid subscription in order to claim coupons!");
     }
   })
   
   app.post(`/api/discardCoupon`, async(req, res) => {
     const loggedInKey = req.body.loggedInKey;
-    if (!loggedInKey) res.json({response: "You need to be logged in to discard coupons!"});
+    if (!loggedInKey) res.status(400).send("You need to be logged in to discard coupons!");
     else {
       const _id = req.body._id;
       // const ip = getIP(req)
       const outcome = await AccountInfo.find({'email':req.body.email}).limit(1)
       if (outcome && bcrypt.compareSync(loggedInKey, outcome[0].loggedInKey)) {
-        if (outcome[0].yourPick !== ' Customer') res.json({response: "Something went wrong!"});
+        if (outcome[0].yourPick !== ' Customer') res.status(200).send("Something went wrong!");
         // if (outcome[0].couponsCurrentlyClaimed === 0) {
             const coupon = await Coupon.find({'_id':_id }).limit(1);
             const filtherID = (IDS, ID) => {
@@ -1044,7 +1004,7 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
             const couponCode = filtherCouponCode(outcome[0].couponCodes, _id);
             redisHelper.set("gyc" + req.body.email, null)
             if (arrCouponCodes.length !== outcome[0].couponCodes.length) {
-              res.json({response: "Coupon Removed!"})
+              res.send("Coupon Removed!")
               await AccountInfo.updateOne(
                 { "_id" : outcome[0]._id }, 
                 { "$set" : { 
@@ -1074,8 +1034,8 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
                 }, 
                 { "upsert" : false } 
               );
-            } else res.json({response: "Coupon Already Removed!"})
-      } else res.json({response: "You need to be logged in and have a valid subscription in order to claim coupons!"});
+            } else res.status(400).send("Coupon Already Removed!")
+      } else res.status(400).send("You need to be logged in and have a valid subscription in order to claim coupons!");
     }
   })
 app.listen(4000, () => console.log("Server Starting"));

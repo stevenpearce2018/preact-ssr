@@ -83,7 +83,7 @@ const CouponsMaker = (props, location) => {
         </div>
       </div>
       <br/>
-  </div>
+      </div>
       );
       return (
       <div>
@@ -95,10 +95,10 @@ const CouponsMaker = (props, location) => {
         </div>
       </div>
       );
-    } catch (error) {
+    } catch (e) {
       return (
         <div className="center">
-          <h2 className="holder marginBottom">Did not find any coupons. We might not know your location, or you might just not have any. Why not create/claim some?</h2>
+          <h2 className="holder marginBottom">Did not find any coupons.</h2>
         </div>
       )
     }

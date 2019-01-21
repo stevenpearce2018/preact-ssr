@@ -5,7 +5,7 @@ import Nav from "../Nav";
 import { actions } from '../store/store'
 import Helmet from "preact-helmet";
 import Fieldset from "../SubComponents/FieldSet/fieldSet";
-import { CenterText } from "../SubComponents/CenterText/centerText";
+import CenterText from "../SubComponents/CenterText/centerText";
 
 class UploadCoupons extends Component {
   render() {
