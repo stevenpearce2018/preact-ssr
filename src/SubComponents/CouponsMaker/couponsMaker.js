@@ -44,7 +44,7 @@ import HaversineInMiles from '../../Lib/HaversineInMiles';
 const CouponsMaker = (props, location) => {
     try {
       const content = props.map((coupons, key) =>
-      <div key={key} className="coupon" id={coupons._id}>
+      <div key={key} className={props[0].ignoreFlex ? "couponIgnoreFlex" : "coupon"} id={coupons._id}>
       <br/>
       <h2 className = "ctitle marginTop marginBottom">{capitalizeCase(coupons.title)}</h2>
       <img className = "img" src={coupons.base64image} alt={coupons.title}/>
@@ -69,6 +69,7 @@ const CouponsMaker = (props, location) => {
       <hr/>
       <div className="description">
       <br/>
+      
         <p>{uppcaseFirstWord(coupons.textarea)}</p>
         <br/>
         <hr/>
@@ -88,9 +89,9 @@ const CouponsMaker = (props, location) => {
       return (
       <div>
         <div className="center">
-          <h2 className="holder marginBottom">Coupons Near You</h2>
+          <h2 className="holder marginBottom">{!props[0].ignoreFlex && "Coupons Near You"}</h2>
         </div>
-        <div className='couponHolder'>
+        <div className={props[0].ignoreFlex ? '' : 'couponHolder'}> 
           {content}
         </div>
       </div>

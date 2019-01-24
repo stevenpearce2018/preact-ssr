@@ -7,20 +7,25 @@ import { connect } from 'unistore/preact';
 import { actions } from '../store/store';
 import checkPasswordStrength from "../Lib/checkPasswordStrength";
 import { route } from 'preact-router';
+import Popup from "../SubComponents/Popup/popup";
 
 export const SignUp = connect(["email", "loggedInKey"], actions)(
-  ({ loggedInKey, email }) => (
-    <SubSignUp loggedInKey={loggedInKey} email={email}/>
+  ({ loggedInKey, email, setPopup, popup }) => (
+    <SubSignUp loggedInKey={loggedInKey} email={email} setPopup={setPopup} popup={popup}/>
   )
 )
 
 class SubSignUp extends Component {
   constructor(props) {
     super(props);
-    this.state = { isCustomer: true, email: undefined, password: undefined };
+    this.state = { popup: undefined, isCustomer: true, email: undefined, password: undefined };
     this.toggle = this.toggle.bind(this);
     this.handleChange = this.handleChange.bind(this);
     this.register = this.register.bind(this);
+  }
+
+  componentDidMount(){
+    if(this.props.loggedInKey || this.props.email) route("/")
   }
 
   handleChange(event){
@@ -29,7 +34,7 @@ class SubSignUp extends Component {
   }
 
   toggle(isAlreadySelected) {
-    isAlreadySelected ? alert("You have already selected this option.") : this.setState({isCustomer: !this.state.isCustomer})
+  isAlreadySelected ? this.setState({popup: <Popup succees={false}>You have already selected this option.</Popup>}) : this.setState({isCustomer: !this.state.isCustomer})
   }
 
   register(){
@@ -64,6 +69,7 @@ class SubSignUp extends Component {
             {property: "og:type", content: "article"}
         ]}
         />
+        {this.state.popup}
       <div className="center">
         <h2 className="holder marginBottom">Sign Up {this.state.isCustomer}</h2>
         <h3 className="marginBottom marginTop">Are you a customer or business owner?</h3>

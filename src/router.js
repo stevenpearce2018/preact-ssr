@@ -6,8 +6,8 @@ import { About } from "./Components/About";
 import { Search } from './Components/Search';
 import Login from "./Components/Login";
 import { SignUp } from "./Components/Signup"
-import MyCoupons from "./Components/MyCoupons";
-import UploadCoupons from "./Components/UploadCoupons";
+import { MyCoupons } from "./Components/MyCoupons";
+import { UploadCoupons } from "./Components/UploadCoupons";
 
 import AsyncRoute from 'preact-async-route';
 

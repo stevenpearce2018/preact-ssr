@@ -26,6 +26,7 @@ class SubApp extends Component {
   componentDidMount(){
     if(this.props.long && this.props.lat) this.getCouponsByUrl(`/api/geoCoupons/${this.props.long}/${this.props.lat}/${this.state.pageNumber}`, {lat: this.props.lat, long: this.props.long})
   }
+
   getCouponsByUrl(url, location) {
     this.setState({coupons: <div className="loaderContainer"><img src="./spinner.gif" alt="Loading coupons near you."/></div>})
     fetch(url, {

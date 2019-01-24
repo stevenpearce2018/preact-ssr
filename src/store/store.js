@@ -1,6 +1,8 @@
 import createStore from 'unistore'
-
 export const actions = store => ({
+	setPopup(state, data) {
+		return { popup: <Popup delay={data.delay || 5000} success={data.success || true}>{data.text || "You forgot to pass text into me!"}</Popup> }
+	},
 	setLocation(state, data) {
 		return { lat: data.lat, long: data.long }
 	},

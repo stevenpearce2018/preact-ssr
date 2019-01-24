@@ -25,8 +25,27 @@ input:focus, select:focus { background: ghostwhite }
     animation-timing-function: ease;	
     -webkit-animation-timing-function: ease;	
   
-    visibility: visible !important;						
+    visibility: visible !important;
+    transition: visibility 0s 2s, opacity 2s linear;			
+    animation:fadeout 2.5s 1;
+    -webkit-animation:fadeout 2.5s 1;
+    animation-fill-mode: forwards;
+
+    animation-delay:3s;
+    -webkit-animation-delay:3s; /* Safari and Chrome */
+    -webkit-animation-fill-mode: forwards;	
   }
+
+
+@keyframes fadeout{
+    from {opacity :1;}
+    to {opacity :0;}
+}
+
+@-webkit-keyframes fadeout{
+    from {opacity :1;}
+    to {opacity :0;}
+}
   
   @keyframes slideDown {
     0% {
@@ -293,13 +312,17 @@ button:focus {
   justify-content: center;
   flex-wrap: wrap;
 }
-.btnHolder{
+.btnHolder, .btnHolderTwo{
   width: 100%;
   display: flex;
   justify-content: center;
   flex-wrap: wrap;
 }
-.coupon{
+.btnHolderTwo{
+  width:96%;
+  margin: auto;
+}
+.coupon, .couponIgnoreFlex{
   margin: 10px;
   width: 48%;
   background-color: ghostwhite;
@@ -307,6 +330,15 @@ button:focus {
   border-color: lightgray;
   border-radius: 5px;
   border-width: 1px;
+}
+.couponIgnoreFlex{
+  width: 96%;
+}
+.noMarginBottom{
+  margin-bottom: -180px;
+}
+.marginTopBig{
+  margin-top: 220px;
 }
 .oldPrice, .newPrice{
   display: inline-block;
@@ -376,6 +408,11 @@ footer{display:table; padding-bottom:30px; width:100%;}
     margin: 10px;
     width: 100%;
   }
+  .marginTopBig{
+    width: 68%;
+    margin: 10px;
+    margin-top: 24px;
+  }
   .navOptions{
     display: none;
   }
@@ -401,6 +438,9 @@ footer{display:table; padding-bottom:30px; width:100%;}
   }
 }
 @media only screen and (max-width: 640px) {
+  .center{
+    width: 90%;
+  }
   .header{
     font-size: 2em;
   }
@@ -415,6 +455,9 @@ footer{display:table; padding-bottom:30px; width:100%;}
 @media only screen and (max-width: 395px) {
   .header{
     font-size: 1.5em;
+  }
+  .subNavOption{
+    font-size: 12px !important;
   }
 }
 @media only screen and (max-width: 345px) {

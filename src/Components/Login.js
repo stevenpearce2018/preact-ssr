@@ -25,6 +25,10 @@ class SubLogin extends Component {
     this.login = this.login.bind(this);
   }
 
+  componentDidMount(){
+    if(this.props.loggedInKey || this.props.email) route("/")
+  }
+
   handleChange(event){
     const { target: { name, value } } = event
     this.setState({ [name]: value })
@@ -47,13 +51,12 @@ class SubLogin extends Component {
         // this.props.login({email: this.state.email, loggedInKey: data.loggedInKey})
         // route("/")
       });
-    }
+    } else this.props.setPopup({text: "Failed to login!", success: false})
   }
 
   render(props, state) {
     const html =
     <div className="container">
-      {this.state.popup}
       {/* <Popup delay={5000} success={false}>This is an alert</Popup> */}
       <Nav/>
       <Helmet

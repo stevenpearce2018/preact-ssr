@@ -2,7 +2,7 @@ import { h, render, Component} from 'preact';
 import { connect } from 'unistore/preact';
 import { actions } from '../store/store';
 import Helmet from "preact-helmet";
-import Fieldset from "../SubComponents/FieldSet/fieldSet";
+import { Fieldset } from "../SubComponents/FieldSet/fieldSet";
 import Nav from "../Nav";
 import CenterText from "../SubComponents/CenterText/centerText";
 import { route } from 'preact-router';
@@ -15,6 +15,11 @@ export const MyCoupons = connect(["email", "loggedInKey", "lat", "long"], action
 )
 
 class SubMyCoupons extends Component {
+
+  componentDidMount(){
+    if(!this.props.loggedInKey || !this.props.email) route("/")
+  }
+
   render() {
     return (
     <div>
@@ -25,5 +30,3 @@ class SubMyCoupons extends Component {
     )
   }
 }
-
-export default MyCoupons;

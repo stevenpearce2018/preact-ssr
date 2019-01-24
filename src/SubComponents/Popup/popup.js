@@ -29,7 +29,7 @@ export default class Popup extends Component {
     this._timer = setTimeout(function(){
       this.setState({visible: false});
       this._timer = null;
-    }.bind(this), this.props.delay);
+    }.bind(this), this.props.delay || 5000);
   }
 
   componentWillUnmount() {
@@ -39,6 +39,6 @@ export default class Popup extends Component {
   render(props, state) {
     return this.state.visible
       ? <div className={`popup ${this.props.success ? "pop-success" : "pop-error"}`}><p className="alert">{this.props.children}</p></div>
-      : <span />;
+      : <div className={`popup ${this.props.success ? "pop-success" : "pop-error"}`}><p className="alert">{this.props.children}</p></div>;
   }
 }
