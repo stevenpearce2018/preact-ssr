@@ -13,7 +13,7 @@ import AsyncRoute from 'preact-async-route';
 
 export default () => (
 	<Router>
-		<App path="/:category?" />
+		<App path="/:category?/:city?/:title?/:id?/:pageNumber?" />
 		<AsyncRoute path="/about" component={About} />
 		<AsyncRoute path="/search" component={Search} />
 		<AsyncRoute path="/login" component={Login} />

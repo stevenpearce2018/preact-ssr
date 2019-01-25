@@ -12,7 +12,7 @@ const minify = require('express-minify');
 const compression = require('compression')
 const redishelper = require('./redishelper')
 const bcrypt = require('bcryptjs');
-const accountSid = process.env.ACCOUNT_SID; // !todo, change dev keys to prod keys
+const accountSid = process.env.ACCOUNT_SID;
 const authToken = process.env.AUTH_TOKEN;
 const pass = process.env.PASS
 const unlimtedcouponerEmail = process.env.EMAIL
@@ -35,7 +35,21 @@ const ObjectId = require('mongodb').ObjectId;
 const useCode = require("./lib/useCode");
 const moment = require("moment");
 const checkPasswordStrength = require('./lib/checkPasswordStrength');
-const sm = require('sitemap');
+const fs = require('fs');
+
+const addUrlToSitemapXML = url => {
+  const filename = "sitemap.xml"
+  fs.readFile(filename, (err, data) => {
+    if(err) throw err;
+    let theFile = data.toString().split("\n");
+    theFile.splice(-1,1);
+    fs.writeFile(filename, theFile.join("\n"), err => {
+    if(err) return console.log(err);
+    });
+    fs.appendFile('sitemap.xml', `\n<url>\n<loc>${url}</loc>\n<changefreq>daily</changefreq>\n<priority>0.3</priority>\n</url>\n</urlset>`, (err, contents) => {
+    });
+  });
+}
 
 // const requireHTTPS = (req, res, next) => {
 //   // The 'x-forwarded-proto' check is for Heroku
@@ -47,29 +61,12 @@ app.use(compression());
 app.use(minify());
 app.use(bodyParser.json({limit:'50mb'}))
 app.use(bodyParser.urlencoded({ extended: true, limit:'50mb' }))
+app.use('*/sitemap.xml', (req, res) => res.sendFile('sitemap.xml' , { root : __dirname}));
 app.use('*/robots.txt', (req, res, next) => {
     res.type('text/plain')
     res.send("# GSM: https://www.unlimitedcouponer.com\nSitemap: https://www.unlimitedcouponer.com/sitemap.xml\nUser-agent: *\nDisallow:");
   });
-  
-  const sitemap = sm.createSitemap ({
-    hostname: 'https://www.unlimitedcouponer.com',
-    cacheTime: 600000,
-    urls: [
-      { url: '/Home',  changefreq: 'daily', priority: 0.3 },
-      { url: '/Search',  changefreq: 'daily',  priority: 0.3 },
-      { url: '/About',  changefreq: 'monthly',  priority: 0.7 },
-      { url: '/Login',  changefreq: 'monthly',  priority: 0.7 },
-      { url: '/Signup',  changefreq: 'monthly',  priority: 0.7 },
-    ]
-  });
-  app.use('*/sitemap.xml', (req, res) => {
-    sitemap.toXML((err, xml) => {
-      if (err) return res.status(500).end();
-      res.header('Content-Type', 'application/xml');
-      res.send( xml );
-    });
-  });
+
 const head = Helmet.rewind();
 
 import Router from './src/router'
@@ -97,6 +94,8 @@ const HTMLShell = (html, state) => `
                 You need to enable JavaScript to run this app.
             </noscript>
             <div id="app">${html}</div>
+            <script>window.__STATE__=${JSON.stringify(state).replace(/<|>/g, '')}</script>
+            <script src="./app.js" async></script>
             <script async defer>
             if ('serviceWorker' in navigator) {
                 window.addEventListener('load', () => {
@@ -104,19 +103,16 @@ const HTMLShell = (html, state) => `
                 });
             }
             </script>
-            <script>window.__STATE__=${JSON.stringify(state).replace(/<|>/g, '')}</script>
-            <script src="./app.js" async></script>
             <script src="https://maps.google.com/maps/api/js?key=AIzaSyDSPHIFPEXvdY0sLi9E2fhPzZgeP6Aat2o" async defer></script>
             <script src="https://js.stripe.com/v3/" async defer></script>
         </body>
     </html>`
 
-
 app.use(express.static(path.join(__dirname, "dist")));
 
-app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountsettings', 'uploadcoupons'], (req, res) => {
+app.get(['/:category?', '/about', 'search', '/signup', '/login', 'accountsettings', 'uploadcoupons'], (req, res) => {
   // !todo, add cookies to persist login state
-	const store = createStore({ coupons: undefined, popup: <h1>hello</h1>, menuActive: false, loggedInKey: undefined, email: undefined, lat: undefined, long: undefined  })
+	const store = createStore({ coupons: undefined, popup: undefined, menuActive: false, loggedInKey: undefined, email: undefined, lat: undefined, long: undefined  })
 	const state = store.getState()
 	const html = render(
 		<Provider store={store}>
@@ -126,23 +122,23 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
 	res.send(HTMLShell(html, state))
 })
 
-  const transporter = nodemailer.createTransport({
-    service: 'gmail',
-    auth: {
-      user: unlimtedcouponerEmail,
-      pass: pass
-    }
-  });
+  // const transporter = nodemailer.createTransport({
+  //   service: 'gmail',
+  //   auth: {
+  //     user: unlimtedcouponerEmail,
+  //     pass: pass
+  //   }
+  // });
   
-  try {
-    mongoose.connect(process.env.DB).then(console.log('Connected to mongoDB'));
-  } catch (error) {
-    console.log(error, "Failed to connect to mongoDB. :(")
-  }
-  const postStripeCharge = res => (stripeErr, stripeRes) => {
-    if (stripeErr) res.status(500).send({ error: stripeErr });
-    else res.status(200).send({ success: stripeRes });
-  }
+  // try {
+  //   mongoose.connect(process.env.DB).then(console.log('Connected to mongoDB'));
+  // } catch (error) {
+  //   console.log(error, "Failed to connect to mongoDB. :(")
+  // }
+  // const postStripeCharge = res => (stripeErr, stripeRes) => {
+  //   if (stripeErr) res.status(500).send({ error: stripeErr });
+  //   else res.status(200).send({ success: stripeRes });
+  // }
 
   app.post('/api/charge', async(req, res) => {
     stripe.charges.create(req.body, postStripeCharge(res));
@@ -385,6 +381,7 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
         // if (req.body.superCoupon === "Let's go super" && chargeData && chargeData.amount && chargeData.amount.toFixed(0) / 25 === req.body.amountCoupons || chargeData.amount.toFixed(0) / 10 === req.body.amountCoupons) charge = await stripe.charges.create(chargeData);
         if (req.body.superCoupon === "Let's go super" && chargeData && chargeData.amount && chargeData.amount.toFixed(0) / 10 === req.body.amountCoupons) charge = await stripe.charges.create(chargeData);
         if(req.body.superCoupon === "Let's go super" && charge && charge.outcome && charge.outcome.type === "authorized" &&  charge.outcome.network_status === "approved_by_network") {
+          // /coupons/city/title/id
           res.json({response: 'Coupon Created'})
           const amountCoupons = req.body.amountCoupons;
           let couponCodes = [];
@@ -392,6 +389,7 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
           for(; i < amountCoupons; i++) couponCodes.push(Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15)+':a');
           const saveCoupon = async () => {
             const mongodbID = new mongoose.Types.ObjectId();
+            addUrlToSitemapXML(`https://www.unlimitedcouponer.com/coupons/${encodeURI(req.body.city).replace(/%20/g, "-")}/${encodeURI(req.body.title).replace(/%20/g, "-")}/${mongodbID}`)
             const coupon = new Coupon({
               _id: mongodbID,
               title: req.body.title,
@@ -1041,4 +1039,23 @@ app.get(['/', '/:category', '/about', 'search', '/signup', '/login', 'accountset
       } else res.status(400).send("You need to be logged in and have a valid subscription in order to claim coupons!");
     }
   })
+
+app.get('*', (req, res) => {
+  const store = createStore({ coupons: undefined, popup: undefined, menuActive: false, loggedInKey: undefined, email: undefined, lat: undefined, long: undefined  })
+	const state = store.getState()
+	const html = render(
+		<Provider store={store}>
+      <div style={"background-color: ghostwhite; border: solid; border-color: lightgray; border-radius: 5px; border-width: 1px; padding-top:100px; padding-bottom:100px; width:90%; margin:auto;"}>
+        <a href="/" style={"width:100%; text-align:center; font-size: 0.75em; font-weight: bold; color: #002e5b; text-decoration: none;"}><h1 style={"background-color: #fde428;"}>UnlimitedCouponer</h1></a>
+        <a href="/" style={"width:100%; margin-top:24px; text-align:center; font-size: 0.75em; font-weight: bold; color: #002e5b; text-decoration: none;"}><h2>404 not found. Click here go home</h2></a>
+        <p style={"width:100%; margin-top:24px; text-align:center;"}>The url: {req.originalUrl} could not be found.</p>
+        <p style={"width:100%; margin-top:24px;text-align:center; color: grey;"}>If you think you reached this page in error, please contact us at unlimitedcouponer@gmail.com</p>
+        <h2 style={"width:100%; text-align:center; font-size: 1em; margin-top:800px; font-weight: bold; color: #002e5b; text-decoration: none;"}>What are you doing down here?</h2>
+        <img style={"width:80%; margin-left:10%;"} src="/giphy.gif"/>
+      </div>
+		</Provider>
+	)
+	res.send(HTMLShell(html, state)).status(404);
+});
+
 app.listen(4000, () => console.log("Server Starting"));
