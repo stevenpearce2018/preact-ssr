@@ -122,23 +122,23 @@ app.get(['/:category?', '/about', 'search', '/signup', '/login', 'accountsetting
 	res.send(HTMLShell(html, state))
 })
 
-  // const transporter = nodemailer.createTransport({
-  //   service: 'gmail',
-  //   auth: {
-  //     user: unlimtedcouponerEmail,
-  //     pass: pass
-  //   }
-  // });
+  const transporter = nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: unlimtedcouponerEmail,
+      pass: pass
+    }
+  });
   
-  // try {
-  //   mongoose.connect(process.env.DB).then(console.log('Connected to mongoDB'));
-  // } catch (error) {
-  //   console.log(error, "Failed to connect to mongoDB. :(")
-  // }
-  // const postStripeCharge = res => (stripeErr, stripeRes) => {
-  //   if (stripeErr) res.status(500).send({ error: stripeErr });
-  //   else res.status(200).send({ success: stripeRes });
-  // }
+  try {
+    mongoose.connect(process.env.DB).then(console.log('Connected to mongoDB'));
+  } catch (error) {
+    console.log(error, "Failed to connect to mongoDB. :(")
+  }
+  const postStripeCharge = res => (stripeErr, stripeRes) => {
+    if (stripeErr) res.status(500).send({ error: stripeErr });
+    else res.status(200).send({ success: stripeRes });
+  }
 
   app.post('/api/charge', async(req, res) => {
     stripe.charges.create(req.body, postStripeCharge(res));
